@@ -34,6 +34,7 @@ ngx_uint_t  ngx_stream_max_module;
 ngx_stream_filter_pt  ngx_stream_top_filter;
 
 
+
 static ngx_command_t  ngx_stream_commands[] = {
 
     { ngx_string("stream"),
@@ -53,6 +54,33 @@ static ngx_core_module_t  ngx_stream_module_ctx = {
     NULL
 };
 
+static ngx_int_t
+ngx_stream_process_init(ngx_cycle_t *cycle){
+    char errstr[512];
+    const char *brokers = "172.26.1.31:9092";
+    const char *topic = "qdreamer-topic";
+    
+    rkconf = rd_kafka_conf_new();
+    
+    if(rd_kafka_conf_set(rkconf, "bootstrap.servers", brokers, errstr,sizeof(errstr)) != RD_KAFKA_CONF_OK){
+        return NGX_ERROR;
+    }
+    
+    rk = rd_kafka_new(RD_KAFKA_PRODUCER, rkconf, errstr, sizeof(errstr));
+    if(!rk){
+        return  NGX_ERROR;
+    }
+    
+    rkt = rd_kafka_topic_new(rk, topic, NULL);
+    
+    if(!rkt){
+        rd_kafka_destroy(rk);
+        
+        return NGX_ERROR;
+    }
+    
+    return NGX_OK;
+}
 
 ngx_module_t  ngx_stream_module = {
     NGX_MODULE_V1,
@@ -61,7 +89,7 @@ ngx_module_t  ngx_stream_module = {
     NGX_CORE_MODULE,                       /* module type */
     NULL,                                  /* init master */
     NULL,                                  /* init module */
-    NULL,                                  /* init process */
+    ngx_stream_process_init,               /* init process */
     NULL,                                  /* init thread */
     NULL,                                  /* exit thread */
     NULL,                                  /* exit process */

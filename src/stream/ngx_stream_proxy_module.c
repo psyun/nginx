@@ -8,6 +8,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_stream.h>
+#include <librdkafka/rdkafka.h>
 
 
 typedef struct {
@@ -55,7 +56,6 @@ typedef struct {
     ngx_stream_complex_value_t      *upstream_value;
 } ngx_stream_proxy_srv_conf_t;
 
-
 static void ngx_stream_proxy_handler(ngx_stream_session_t *s);
 static ngx_int_t ngx_stream_proxy_eval(ngx_stream_session_t *s,
     ngx_stream_proxy_srv_conf_t *pscf);
@@ -96,7 +96,6 @@ static ngx_int_t ngx_stream_proxy_ssl_name(ngx_stream_session_t *s);
 static ngx_int_t ngx_stream_proxy_set_ssl(ngx_conf_t *cf,
     ngx_stream_proxy_srv_conf_t *pscf);
 
-
 static ngx_conf_bitmask_t  ngx_stream_proxy_ssl_protocols[] = {
     { ngx_string("SSLv2"), NGX_SSL_SSLv2 },
     { ngx_string("SSLv3"), NGX_SSL_SSLv3 },
@@ -108,7 +107,6 @@ static ngx_conf_bitmask_t  ngx_stream_proxy_ssl_protocols[] = {
 };
 
 #endif
-
 
 static ngx_conf_deprecated_t  ngx_conf_deprecated_proxy_downstream_buffer = {
     ngx_conf_deprecated, "proxy_downstream_buffer", "proxy_buffer_size"
@@ -366,7 +364,7 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                    "proxy connection handler");
-
+    
     u = ngx_pcalloc(c->pool, sizeof(ngx_stream_upstream_t));
     if (u == NULL) {
         ngx_stream_proxy_finalize(s, NGX_STREAM_INTERNAL_SERVER_ERROR);
@@ -1500,6 +1498,9 @@ ngx_stream_proxy_process(ngx_stream_session_t *s, ngx_uint_t from_upstream,
     for ( ;; ) {
 
         if (do_write && dst) {
+            if(from_upstream) {
+                ngx_gowild_kafka_send_msg(c->log, b);
+            }
 
             if (*out || *busy || dst->buffered) {
                 rc = ngx_stream_top_filter(s, *out, from_upstream);

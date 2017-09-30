@@ -11,6 +11,7 @@
 
 #include <ngx_config.h>
 #include <ngx_core.h>
+#include <librdkafka/rdkafka.h>
 
 #if (NGX_STREAM_SSL)
 #include <ngx_stream_ssl_module.h>
@@ -289,7 +290,11 @@ ngx_int_t ngx_stream_core_content_phase(ngx_stream_session_t *s,
 void ngx_stream_init_connection(ngx_connection_t *c);
 void ngx_stream_session_handler(ngx_event_t *rev);
 void ngx_stream_finalize_session(ngx_stream_session_t *s, ngx_uint_t rc);
+void ngx_gowild_kafka_send_msg(ngx_log_t *log, ngx_buf_t *b);
 
+rd_kafka_t *rk;
+rd_kafka_topic_t *rkt;
+rd_kafka_conf_t *rkconf;
 
 extern ngx_module_t  ngx_stream_module;
 extern ngx_uint_t    ngx_stream_max_module;
