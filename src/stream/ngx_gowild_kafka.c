@@ -144,7 +144,7 @@ ngx_gowild_kafka_send_msg(ngx_log_t *log, ngx_buf_t *b) {
     gkm = ngx_gowild_msg_parse((char*)b->pos, log);
     msg = ngx_serialize_msg(gkm);
     len = strlen(msg);
-    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, log, 0, "ngx_gowild_msg,msg: %s, len: %d", msg, len);
+    ngx_log_info2(NGX_LOG_DEBUG_STREAM, log, 0, "ngx_gowild_msg,msg: %s, len: %d", msg, len);
 
     if(rd_kafka_produce(rkt,
                     RD_KAFKA_PARTITION_UA,
