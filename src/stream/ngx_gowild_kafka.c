@@ -22,7 +22,7 @@ void add_line(char **res, int *line_offset, char *buf){
 }
 
 char*
-ngx_strncopy(char *dest, const char *src, size_t n){
+ngx_strncpy(char *dest, const char *src, size_t n){
     int size = sizeof(char) * (n + 1);
     char *tmp = (char*)malloc(size);
 
@@ -56,6 +56,7 @@ ngx_request_line_value(char **req_line,int line_offset , ngx_log_t *log) {
         buf = (char*)malloc(sizeof(char*) * len);
         j = 0;
 
+        //analysis current response header line
         while(*p != '\0') {
             if(*p != ':') {
                 p++;
@@ -63,7 +64,8 @@ ngx_request_line_value(char **req_line,int line_offset , ngx_log_t *log) {
                 continue;
 
             } else {
-                ngx_strncopy(buf, req_line[i], j);
+                //copy header name to buf
+                ngx_strncpy(buf, req_line[i], j);
 
                 if(!strcmp(buf, "device")){
                     gkm->deviceId = (char*)malloc(sizeof(char*) * (len - j - 1));
@@ -75,9 +77,21 @@ ngx_request_line_value(char **req_line,int line_offset , ngx_log_t *log) {
                 break;
             }
         }
+
+        free(buf);
     }
     
     return gkm;
+}
+
+int32_t (*partitioner) (
+    					const rd_kafka_topic_t *rkt,
+    					const void *keydata,
+    					size_t keylen,
+    					int32_t partition_cnt,
+    					void *rkt_opaque,
+    					void *msg_opaque){
+    return 0;
 }
 
 ngx_gowild_kafka_msg_t* 
@@ -125,7 +139,7 @@ ngx_serialize_msg(ngx_gowild_kafka_msg_t *gkm) {
     int msg_len;
     char *msg_str;
 
-    msg_len = strlen(gkm->hook) + strlen(gkm->deviceId) + strlen(gkm->body);
+    msg_len = strlen(gkm->hook) + strlen(gkm->deviceId) + strlen(gkm->body) + 2;
     msg_str = (char*)malloc(sizeof(char) * msg_len);
     strcpy(msg_str, gkm->hook);
     strcat(msg_str, gkm->deviceId);
