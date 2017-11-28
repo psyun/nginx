@@ -57,8 +57,8 @@ static ngx_core_module_t  ngx_stream_module_ctx = {
 static ngx_int_t
 ngx_stream_process_init(ngx_cycle_t *cycle){
     char errstr[512];
-    const char *brokers = "172.26.1.31:9092";
-    const char *topic = "qdreamer-topic";
+    const char *brokers = "kafka01-xb:9092";
+    const char *topic = "topic-qdreamer-message";
     
     rkconf = rd_kafka_conf_new();
     

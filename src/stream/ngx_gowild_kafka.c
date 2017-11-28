@@ -84,13 +84,13 @@ ngx_request_line_value(char **req_line,int line_offset , ngx_log_t *log) {
     return gkm;
 }
 
-int32_t (*partitioner) (
+int32_t partitioner (
     					const rd_kafka_topic_t *rkt,
     					const void *keydata,
     					size_t keylen,
     					int32_t partition_cnt,
     					void *rkt_opaque,
-    					void *msg_opaque){
+    					void *msg_opaque) {
     return 0;
 }
 
@@ -98,7 +98,7 @@ ngx_gowild_kafka_msg_t*
 ngx_gowild_msg_parse(char *msg, ngx_log_t *log){
     int offset = 0;
     int i = 0;
-    char buf[512];
+    char buf[1024];
     int slash_count = 0;
     int line_offset = 0;
     ngx_gowild_kafka_msg_t *gkm;
@@ -154,11 +154,18 @@ ngx_gowild_kafka_send_msg(ngx_log_t *log, ngx_buf_t *b) {
     char *msg;
     size_t len;
     ngx_gowild_kafka_msg_t *gkm;
+    size_t blen;
+    char *resp;
 
-    gkm = ngx_gowild_msg_parse((char*)b->pos, log);
+    blen = b->last - b->pos;
+    resp = (char*)malloc(sizeof(char) * (blen + 1)) ;
+    strncpy(resp, (char*)b->pos, blen);
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, log, 0, "http response: %s", resp);
+
+    gkm = ngx_gowild_msg_parse(resp, log);
     msg = ngx_serialize_msg(gkm);
     len = strlen(msg);
-    ngx_log_info2(NGX_LOG_DEBUG_STREAM, log, 0, "ngx_gowild_msg,msg: %s, len: %d", msg, len);
+    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, log, 0, "ngx_gowild_msg,msg: %s, len: %d", msg, len);
 
     if(rd_kafka_produce(rkt,
                     RD_KAFKA_PARTITION_UA,
